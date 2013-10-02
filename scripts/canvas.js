@@ -6,6 +6,9 @@ define(function(require, exports, module) {
 
     var c = this.context = canvas.getContext("2d");
     document.body.appendChild(canvas);
+    document.body.style.margin = '0';
+    document.body.style.width = width + 'px';
+    document.body.style.height = height + 'px';
 
     document.addEventListener('touchstart', function(e) {
       game.touchstart(e);
@@ -13,6 +16,7 @@ define(function(require, exports, module) {
 
     document.addEventListener('touchmove', function(e) {
       game.touchmove(e);
+      e.preventDefault();
     }, false);
 
 
