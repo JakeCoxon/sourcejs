@@ -1,5 +1,7 @@
 define(function(require, exports, module) {
 
+  var Tile = require('tile');
+
   function Game() {
     var self = this;
     this.loaded = false;
@@ -7,6 +9,13 @@ define(function(require, exports, module) {
     this.sprites = new Image();
     this.sprites.onload = function() { self.loaded = true; };
     this.sprites.src = "assets/sprites.png";
+
+    this.tiles = [];
+    for (var i = 0; i < 10 * 10; i++) {
+      var tile = new Tile(Math.floor(Math.random() * 4), Math.floor(Math.random() * 4));
+      this.tiles.push(tile);
+    }
+    window.game = this;
   }
   
   var T = 128;
@@ -14,31 +23,34 @@ define(function(require, exports, module) {
 
     if (!this.loaded) return;
     this.ctx = ctx;
+
     var sprites = this.sprites;
 
     ctx.save();
-
-    // Use the identity matrix while clearing the canvas
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Restore the transform
+    ctx.clearRect(0, 0, 1136, 640);
     ctx.restore();
 
-    var o = -128 + (time / 8) % 128;
+    // for (var i = 0; i < 10; i++) {
+    //   for (var j = 0; j < 10; j++) {
+    //     ctx.drawImage(sprites, 256 + 64, 0, 64, 64,
+    //       i * T, j * T, T, T);
+    //   }
+    // }
 
-    var offset = time / 10 % 128;
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 10; i++) {
       for (var j = 0; j < 10; j++) {
-        ctx.drawImage(sprites, 256 + 64, 0, 64, 64,
-          o + i * T, o + j * T, T, T);
+
+        ctx.save();
+        var tile = this.tiles[i + j * 10];
+        ctx.translate(T * i + T/2, T * j + T/2);
+        ctx.rotate(tile.rotation * Math.PI / 2);
+        ctx.translate(-T * i - T/2, -T * j - T/2);
+        ctx.drawImage(sprites, tile.type * 64, 0, 64, 64, T * i, T * j, T, T);
+
+        ctx.restore();
       }
     }
-
-    ctx.drawImage(sprites, 0, 64, 64, 64, T, T, T, T);
-    ctx.drawImage(sprites, 64, 0, 64, 64, 2 * T, T, T, T);
-    ctx.drawImage(sprites, 64, 0, 64, 64, 2 * T, 2 * T, T, T);
-    ctx.drawImage(sprites, 64, 64, 64, 64, T, 2 * T, T, T);
   };
 
   var drag = {x: 0, y: 0};
