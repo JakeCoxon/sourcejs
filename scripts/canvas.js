@@ -16,7 +16,7 @@ define(function(require, exports, module) {
       canvas.height = window.innerHeight;
       game.resize(window.innerWidth, window.innerHeight);
     }
-    
+
     window.addEventListener('resize', resize);
     resize();
 
@@ -34,6 +34,7 @@ define(function(require, exports, module) {
     }, false);
 
 
+
     var down = false;
     document.addEventListener('mousedown', function(e) {
       down = true;
@@ -46,6 +47,10 @@ define(function(require, exports, module) {
     document.addEventListener('mousemove', function(e) {
       if (down) game.touchmove({touches: [{clientX: e.offsetX, clientY: e.offsetY}]});
     }, false);
+    document.addEventListener('mousewheel', function(e) {
+      var delta = e.detail ? e.detail : e.wheelDelta / -120;
+      game.scroll(delta);
+    }, false)
 
     c.fillStyle = "white";
     c.font = "10px arial";

@@ -18,7 +18,7 @@ define(function(require, exports, module) {
     //   var tile = new Tile(Math.floor(Math.random() * 4), Math.floor(Math.random() * 4));
     //   this.tiles.push(tile);
     // }
-    this.scale = 1;
+    this.scale = 2;
 
     this.width = 10; this.height = 10;
     this.startX = 5; this.startY = 5;
@@ -93,6 +93,7 @@ define(function(require, exports, module) {
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.windowWidth, this.windowHeight);
+    ctx.restore();
 
     // for (var i = 0; i < 10; i++) {
     //   for (var j = 0; j < 10; j++) {
@@ -101,28 +102,28 @@ define(function(require, exports, module) {
     //   }
     // }
 
-    ctx.translate(0,0);
+    var i, j;
 
-    for (var i = 0; i < this.background.cols; i++) {
-      for (var j = 0; j < this.background.rows; j++) {
-        ctx.drawImage(sprites, 5 * 64, 0, 64, 64, this.background.x + T * i, this.background.y + T * j, T, T);
+    for (i = 0; i < this.background.cols; i++) {
+      for (j = 0; j < this.background.rows; j++) {
+        ctx.drawImage(sprites, 5 * 64, 0, 64, 64, (this.background.x + T * i) * this.scale, (this.background.y + T * j) * this.scale, T * this.scale, T * this.scale);
       }
     }
 
-    for (var i = 0; i < this.width; i++) {
-      for (var j = 0; j < this.height; j++) {
+    for (i = 0; i < this.width; i++) {
+      for (j = 0; j < this.height; j++) {
 
         ctx.save();
         var tile = this.tiles[i + j * this.width];
-        ctx.translate(T * i + T/2 + this.boardX, T * j + T/2 + this.boardY);
+        ctx.translate((T * i + T/2 + this.boardX) * this.scale, (T * j + T/2 + this.boardY) * this.scale);
         ctx.rotate(tile.rotation * Math.PI / 2);
-        ctx.translate(-T * i - T/2 - this.boardX, -T * j - T/2 - this.boardY);
+        ctx.translate((-T * i - T/2 - this.boardX) * this.scale, (-T * j - T/2 - this.boardY) * this.scale);
 
         var sprite = tile.type, on = this.filled[i + j * this.width] ? 1 : 0;
         if (i == this.startX && j == this.startY) {
           sprite = 5; on = 1;
         }
-        ctx.drawImage(sprites, sprite * 64, on * 64, 64, 64, T * i + this.boardX, T * j + this.boardY, T, T);
+        ctx.drawImage(sprites, sprite * 64, on * 64, 64, 64, (T * i + this.boardX) * this.scale, (T * j + this.boardY) * this.scale, T * this.scale, T * this.scale);
 
         ctx.restore();
       }
@@ -156,9 +157,11 @@ define(function(require, exports, module) {
     offsetY = e.touches[0].clientY - drag.y;
 
 
+    tboardX = boardX + offsetX;
+    tboardY = boardY + offsetY;
 
-    tboardX = Math.min(Math.max(boardX + offsetX, 568 - this.width * T), 0);
-    tboardY = Math.min(Math.max(boardY + offsetY, 320 - this.height * T), 0);
+    // tboardX = Math.min(Math.max(boardX + offsetX, 568 - this.width * T), 0);
+    // tboardY = Math.min(Math.max(boardY + offsetY, 320 - this.height * T), 0);
     // var s = (100 + offsetX) / 100;
     // this.scale = s;
     this.ctx.setTransform(1, 0, 0, 1, tboardX, tboardY);
@@ -174,8 +177,10 @@ define(function(require, exports, module) {
     boardY = tboardY;
 
     if (!click) return;
-    var x = mouseX - (this.boardX + boardX) * this.scale,
-        y = mouseY - (this.boardY + boardY) * this.scale;
+
+    var x = mouseX / this.scale - (this.boardX) - boardX / this.scale,
+        y = mouseY / this.scale - (this.boardY) - boardY / this.scale;
+
 
     var xTile = Math.floor(x / T),
         yTile = Math.floor(y / T);
@@ -183,6 +188,10 @@ define(function(require, exports, module) {
     this.tiles[xTile + yTile * 10].rotate();
     this.resetAll();
     this.setFilled(this.startX, this.startY, true);
+  };
+
+  Game.prototype.scroll = function(delta) {
+    this.scale += delta / 20;
   };
 
   function Background() {
