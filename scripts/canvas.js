@@ -1,14 +1,24 @@
 define(function(require, exports, module) {
   function Canvas(game, width, height) {
     var canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
+    // canvas.style.width = '100%';
+    // canvas.style.height = '100%';
 
     var c = this.context = canvas.getContext("2d");
     document.body.appendChild(canvas);
     document.body.style.margin = '0';
-    document.body.style.width = width + 'px';
-    document.body.style.height = height + 'px';
+    document.body.style.overflow = 'hidden';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      game.resize(window.innerWidth, window.innerHeight);
+    }
+    
+    window.addEventListener('resize', resize);
+    resize();
 
     document.addEventListener('touchstart', function(e) {
       game.touchstart(e);
@@ -18,18 +28,23 @@ define(function(require, exports, module) {
       game.touchmove(e);
       e.preventDefault();
     }, false);
+    
+    document.addEventListener('touchend', function(e) {
+      game.touchend(e);
+    }, false);
 
 
     var down = false;
     document.addEventListener('mousedown', function(e) {
       down = true;
-      game.touchstart({touches: [{clientX: e.offsetX, clientY: e.offsetX}]});
+      game.touchstart({touches: [{clientX: e.offsetX, clientY: e.offsetY}]});
     }, false);
     document.addEventListener('mouseup', function(e) {
       down = false;
+      game.touchend({touches: []});
     }, false);
     document.addEventListener('mousemove', function(e) {
-      if (down) game.touchmove({touches: [{clientX: e.offsetX, clientY: e.offsetX}]});
+      if (down) game.touchmove({touches: [{clientX: e.offsetX, clientY: e.offsetY}]});
     }, false);
 
     c.fillStyle = "white";
@@ -38,7 +53,7 @@ define(function(require, exports, module) {
 
     var self = this;
     var drawLoop = function(t) {
-      game.draw(t, c, this);
+      game.draw(t, c, canvas);
       window.webkitRequestAnimationFrame(drawLoop);
     };
     drawLoop(1);
