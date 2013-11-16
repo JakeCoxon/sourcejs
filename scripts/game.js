@@ -92,7 +92,41 @@ define(function(require, exports, module) {
     if (!this.loaded) return;
     this.ctx = ctx;
 
-    var sprites = this.sprites;
+
+    if (this.invalidated) {
+      this.invalidated = false;
+
+      var _ctx = this.cache.getContext('2d');
+      _ctx.setTransform(1, 0, 0, 1, -this.background.x, -this.background.y);
+
+      var i, j;
+
+      for (i = 0; i < this.background.cols; i++) {
+        for (j = 0; j < this.background.rows; j++) {
+          this.drawSprite(_ctx, 5, 0, this.background.x + T * i, this.background.y + T * j, 0);
+        }
+      }
+
+      _ctx.save();
+      _ctx.translate(this.boardX, this.boardY);
+
+      for (i = 0; i < this.width; i++) {
+        for (j = 0; j < this.height; j++) {
+
+          var tile = this.tiles[i + j * this.width];
+
+          var sprite = tile.type, on = this.filled[i + j * this.width] ? 1 : 0;
+          if (i == this.startX && j == this.startY) {
+            sprite = 5; on = 1;
+          }
+
+          this.drawSprite(_ctx, sprite, on, T * i, T * j, tile.rotation);
+
+        }
+      }
+      _ctx.restore();
+
+    }
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.windowWidth, this.windowHeight);
@@ -100,33 +134,9 @@ define(function(require, exports, module) {
 
     ctx.setTransform(1, 0, 0, 1, this.dragger.x, this.dragger.y);
 
+    ctx.drawImage(this.cache, this.background.x, this.background.y);
 
-    var i, j;
 
-    for (i = 0; i < this.background.cols; i++) {
-      for (j = 0; j < this.background.rows; j++) {
-        this.drawSprite(ctx, 5, 0, this.background.x + T * i, this.background.y + T * j, 0);
-      }
-    }
-
-    ctx.save();
-    ctx.translate(this.boardX, this.boardY);
-
-    for (i = 0; i < this.width; i++) {
-      for (j = 0; j < this.height; j++) {
-
-        var tile = this.tiles[i + j * this.width];
-
-        var sprite = tile.type, on = this.filled[i + j * this.width] ? 1 : 0;
-        if (i == this.startX && j == this.startY) {
-          sprite = 5; on = 1;
-        }
-
-        this.drawSprite(ctx, sprite, on, T * i, T * j, tile.rotation);
-
-      }
-    }
-    ctx.restore();
 
   };
 
@@ -145,6 +155,16 @@ define(function(require, exports, module) {
     return offscreenCanvas;
   };
 
+  Game.prototype.createCache = function(w, h) {
+    var offscreenCanvas = document.createElement('canvas');
+
+    var size = Math.max(w, h);
+    offscreenCanvas.width = size;
+    offscreenCanvas.height = size;
+
+    return offscreenCanvas;
+  }
+
   Game.prototype.drawSprite = function(ctx, tx, ty, x, y, angle) {
     
     var c = "" + tx + ty + angle;
@@ -160,6 +180,10 @@ define(function(require, exports, module) {
     this.boardX = (width - this.width * T) / 2;
     this.boardY = (height - this.height * T) / 2;
     this.background.setSize(width, height);
+
+    this.cache = this.createCache(this.background.cols * T, this.background.rows *  T);
+    this.invalidated = true;
+
     this.dragger.containerWidth = width;
     this.dragger.containerHeight = height;
     this.dragger.contain();
@@ -189,6 +213,7 @@ define(function(require, exports, module) {
     this.tiles[xTile + yTile * 10].rotate();
     this.resetAll();
     this.setFilled(this.startX, this.startY, true);
+    this.invalidated = true;
   };
 
   Game.prototype.scroll = function(delta) {
