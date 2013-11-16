@@ -26,7 +26,7 @@ define(function(require, exports, module) {
     this.boardWidth = this.width * T;
     this.boardHeight = this.height * T;
 
-    this.background = new Background();
+    this.background = new Background(T * this.width + T, T * this.height + T);
 
     this.tiles = new RandomGenerator(this.width, this.height).generate(this.startX, this.startY);
 
@@ -172,11 +172,6 @@ define(function(require, exports, module) {
   Game.prototype.touchmove = function(e) {
     this.dragger.drag(e.touches[0].clientX, e.touches[0].clientY);
 
-    // tboardX = Math.min(Math.max(boardX + offsetX, 568 - this.width * T), 0);
-    // tboardY = Math.min(Math.max(boardY + offsetY, 320 - this.height * T), 0);
-    // var s = (100 + offsetX) / 100;
-    // this.scale = s;
-
     if (Math.abs(this.dragger.mouseDistX) > 10 || Math.abs(this.dragger.mouseDistY) > 10)
       this.click = false;
     
@@ -185,44 +180,52 @@ define(function(require, exports, module) {
 
     if (!this.click) return;
 
-    // var mouseX = e.touches[0].clientX,
-    //     mouseY = e.touches[0].clientY;
+    var x = this.dragger.localMouseX(-this.boardX),
+        y = this.dragger.localMouseY(-this.boardY);
 
-    // var x = mouseX / this.scale - (this.boardX) - boardX / this.scale,
-    //     y = mouseY / this.scale - (this.boardY) - boardY / this.scale;
+    var xTile = Math.floor(x / T),
+        yTile = Math.floor(y / T);
 
-
-    // var xTile = Math.floor(x / T),
-    //     yTile = Math.floor(y / T);
-
-    // this.tiles[xTile + yTile * 10].rotate();
-    // this.resetAll();
-    // this.setFilled(this.startX, this.startY, true);
+    this.tiles[xTile + yTile * 10].rotate();
+    this.resetAll();
+    this.setFilled(this.startX, this.startY, true);
   };
 
   Game.prototype.scroll = function(delta) {
     this.scale += delta / 20;
   };
 
-  function Background() { }
+  function Background(minWidth, minHeight) {
+    this.minWidth = minWidth; this.minHeight = minHeight;
+  }
   Background.prototype.setSize = function(width, height) {
-    width += 64; height += 64;
-    this.cols = Math.floor(width / T / 2) * 2 + 2;
-    this.rows = Math.floor(height / T / 2) * 2 + 2;
+    var bgWidth = Math.max(this.minWidth, width),
+        bgHeight = Math.max(this.minHeight, height);
+    this.cols = Math.floor(bgWidth / T / 2) * 2 + 2;
+    this.rows = Math.floor(bgHeight / T / 2) * 2 + 2;
     this.x = (width - this.cols * T) / 2;
     this.y = (height - this.rows * T) / 2;
   };
 
-  function Drag() {
+  function MouseHandler() {
     this.mouseDownX = 0; this.mouseDownY = 0;
+    this.mouseX = 0; this.mouseY = 0;
     this.x = 0; this.y = 0;
     this.startX = 0; this.startY = 0;
   }
-  Drag.prototype.press = function(x, y) {
+  MouseHandler.prototype.localMouseX = function(offset) {
+    return this.mouseX + offset - this.x;
+  };
+  MouseHandler.prototype.localMouseY = function(offset) {
+    return this.mouseY + offset - this.y;
+  };
+  MouseHandler.prototype.press = function(x, y) {
     this.mouseDownX = x; this.mouseDownY = y;
+    this.mouseX = x; this.mouseY = y;
     this.startX = this.x; this.startY = this.y;
   };
-  Drag.prototype.drag = function(x, y) {
+  MouseHandler.prototype.drag = function(x, y) {
+    this.mouseX = x; this.mouseY = y;
     this.mouseDistX = x - this.mouseDownX;
     this.mouseDistY = y - this.mouseDownY;
     this.x = this.startX + this.mouseDistX;
@@ -235,10 +238,10 @@ define(function(require, exports, module) {
     this.margin = margin;
   }
 
-  RectDragger.prototype = new Drag();
+  RectDragger.prototype = new MouseHandler();
 
   RectDragger.prototype.drag = function(x, y) {
-    Drag.prototype.drag.call(this, x, y);
+    MouseHandler.prototype.drag.call(this, x, y);
     this.contain();
   }
   RectDragger.prototype.contain = function() {
