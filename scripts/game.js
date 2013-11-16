@@ -100,12 +100,6 @@ define(function(require, exports, module) {
 
     ctx.setTransform(1, 0, 0, 1, this.dragger.x, this.dragger.y);
 
-    // for (var i = 0; i < 10; i++) {
-    //   for (var j = 0; j < 10; j++) {
-    //     ctx.drawImage(sprites, 256 + 64, 0, 64, 64,
-    //       i * T, j * T, T, T);
-    //   }
-    // }
 
     var i, j;
 
@@ -114,12 +108,6 @@ define(function(require, exports, module) {
         this.drawSprite(ctx, 5, 0, this.background.x + T * i, this.background.y + T * j, 0);
       }
     }
-
-    // for (i = 0; i < this.background.cols; i++) {
-    //   for (j = 0; j < this.background.rows; j++) {
-    //     ctx.drawImage(sprites, 5 * 64, 0, 64, 64, (this.background.x + T * i) * this.scale, (this.background.y + T * j) * this.scale, T * this.scale, T * this.scale);
-    //   }
-    // }
 
     ctx.save();
     ctx.translate(this.boardX, this.boardY);
